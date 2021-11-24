@@ -1,0 +1,31 @@
+name: Deploy to GitHub Pages
+
+on:
+    push:
+        branches:
+            - build
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                submodules: recursive
+
+            - name: Set up Node
+              uses: actions/setup-node@v2
+
+            - run: make setup reskindex
+            - run: yarn --cwd element-web build
+            - run: cp config.json element-web/webapp/
+            - run: |
+                echo $(grep version element-web/package.json | sed 's|.*: \"\(.*\)\",|\1|') > element-web/webapp/version
+            - name: Deploy
+              uses: crazy-max/ghaction-github-pages@v2
+              with:
+                  target_branch: gh-pages
+                  build_dir: element-web/webapp
+                  fqdn: schildi.alefvanoon.xyz
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
